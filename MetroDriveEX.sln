@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35327.3
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetroDriveEX", "MetroDriveEX.csproj", "{70023D49-303F-436F-8968-24039476D45B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{70023D49-303F-436F-8968-24039476D45B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70023D49-303F-436F-8968-24039476D45B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70023D49-303F-436F-8968-24039476D45B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70023D49-303F-436F-8968-24039476D45B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4FDE4B0A-6280-4F44-8A73-4759F1214BB9}
+	EndGlobalSection
+EndGlobal
