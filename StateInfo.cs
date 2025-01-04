@@ -1,9 +1,8 @@
-﻿
-namespace MetroDriveEX.MapPlugin
+﻿namespace MetroDriveEX.MapPlugin
 {
-    internal class Life
+    public class LifeInfo //Life関連(加点減点)に必要な変数
     {
-        public int life;
+        public int Life;
         //減点系
         public int DelayTime;//遅延
         public bool IsDelayTime;
@@ -22,5 +21,16 @@ namespace MetroDriveEX.MapPlugin
         public bool IsGreat;
         public int Bonus;//ボーナス点(警笛とか)
         public bool IsBonus;
+        //難易度設計
+        public int Level;//難易度(1~5)
+        //その他
+        public float Margin;//合格範囲
+    }
+    public class UIInfo //UI要素の解像度、ピポットの設定
+    {
+        public float x;
+        public float y;
+        public float sizex;
+        public float sizey;
     }
 }

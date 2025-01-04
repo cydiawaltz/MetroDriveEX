@@ -59,8 +59,12 @@
     <Reference Include="ObjectiveHarmonyPatch, Version=1.1.40209.1, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\ObjectiveHarmonyPatch.1.1.0\lib\ObjectiveHarmonyPatch.dll</HintPath>
     </Reference>
+    <Reference Include="SlimDX, Version=4.0.13.43, Culture=neutral, PublicKeyToken=b1b0c32fd1ffe4f9, processorArchitecture=x86">
+      <HintPath>packages\SlimDX.4.0.13.44\lib\NET40\SlimDX.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -75,7 +79,7 @@
   <ItemGroup>
     <Compile Include="Drawer.cs" />
     <Compile Include="Functions.cs" />
-    <Compile Include="Life.cs" />
+    <Compile Include="StateInfo.cs" />
     <Compile Include="MapPluginMain.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReadFile.cs" />
