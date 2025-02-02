@@ -1,4 +1,7 @@
-﻿namespace MetroDriveEX.MapPlugin
+﻿using System;
+using System.Threading.Tasks;
+
+namespace MetroDriveEX.MapPlugin
 {
     public class LifeInfo //Life関連(加点減点)に必要な変数
     {
@@ -33,4 +36,28 @@
         public float sizex;
         public float sizey;
     }
+    public class AssistantUIInfo//Drawer.csとTrainController.csで情報を授受するやつ
+    {
+        public bool IsRestarted = false;
+        public double over;
+        public event EventHandler OnEBUsed;
+        public event EventHandler OnGood;
+        public event EventHandler OnGreat;
+        public event EventHandler OnOver;
+        public event EventHandler OnTeitu;
+        public event EventHandler FadeInUI;//外にシュッと動かす
+        public event EventHandler FadeOutUI;
+        public event EventHandler AlphaIn;
+        public event EventHandler AlphaOut;
+        public void EBusedInvoke() => OnEBUsed.Invoke(this, EventArgs.Empty);
+        public void GoodInvoke() => OnGood.Invoke(this, EventArgs.Empty);
+        public void GreatInvoke() => OnGreat.Invoke(this, EventArgs.Empty);
+        public void OverInvoke() => OnOver.Invoke(this, EventArgs.Empty);
+        public void TeituInvoke() => OnTeitu.Invoke(this, EventArgs.Empty);
+        public void FadeInUIInvoke() => FadeInUI.Invoke(this, EventArgs.Empty);
+        public void FadeOutUIInvoke() => FadeOutUI.Invoke(this, EventArgs.Empty);
+        public void AlphaInInvoke() => AlphaIn.Invoke(this, EventArgs.Empty);
+        public void AlphaOutInvoke() => AlphaOut.Invoke(this, EventArgs.Empty);
+    }
+
 }

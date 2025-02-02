@@ -8,12 +8,13 @@ namespace MetroDriveEX.MapPlugin
 {
     internal class ReadFile
     {
-        public static LifeInfo ReadLifeSettings(string Location)
+        public static string Location;
+        public static LifeInfo ReadLifeSettings()
         {
             string path = Path.Combine(Path.GetDirectoryName(Location), @"setting\setting.txt");
             LifeInfo life = new LifeInfo();
-            try
-            {
+            //try
+            //{
                 using(StreamReader sr = new StreamReader(path))
                 {
                     string contents = sr.ReadLine();
@@ -35,14 +36,14 @@ namespace MetroDriveEX.MapPlugin
                     life.Level = temp[9];
                     life.Margin = temp[10];
                 }
-            }
+            /*}
             catch
             {
                 MessageBox.Show("なんかどっかしらでエラーon ReadLifeSettings","debug",MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            }*/
             return life;
         }
-        public static List<UIInfo> ReadUIElementFile(string Location,string fileName)
+        public static List<UIInfo> ReadUIElementFile(string fileName)
         {
             string path = Path.Combine(Path.GetDirectoryName(Location), @"setting\"+fileName+".txt");
             List<UIInfo> infos = new List<UIInfo>();
