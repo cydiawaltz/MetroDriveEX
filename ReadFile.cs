@@ -1,4 +1,5 @@
 ﻿using SlimDX.Direct3D9;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -47,11 +48,11 @@ namespace MetroDriveEX.MapPlugin
         {
             string path = Path.Combine(Path.GetDirectoryName(Location), @"setting\"+fileName+".txt");
             List<UIInfo> infos = new List<UIInfo>();
+            int debug = 0;
             try
             {
                 using (StreamReader sr = new StreamReader(path))
                 {
-                    
                     while(true)
                     {
                         string contents = sr.ReadLine();
@@ -66,13 +67,14 @@ namespace MetroDriveEX.MapPlugin
                         info.sizex = float.Parse(lines[2]);
                         info.sizey = float.Parse(lines[3]);
                         infos.Add(info);
+                        debug++;
                         continue;
                     }
                 }
             }
-            catch
+            catch(Exception e)
             {
-                MessageBox.Show("なんかどっかでエラー on ReadUIElementFile");
+                MessageBox.Show("なんかどっかでエラー on ReadUIElementFile"+debug+fileName+e.Message);
             }
             return infos;
         }

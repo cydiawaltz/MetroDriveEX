@@ -10,7 +10,7 @@ namespace MetroDriveEX.MapPlugin
 {
     internal class TrainController
     {
-        internal IBveHacker Hacker;
+        internal static IBveHacker Hacker;
         double Speed; double OldSpeed;
         double Now; double Arrive;
         double NextLoc; double CurrentLoc;
@@ -20,9 +20,13 @@ namespace MetroDriveEX.MapPlugin
         public List<double> Locations = new List<double>();//駅到着時にリプレイするための位置保存
         TimeSpan Timer = TimeSpan.Zero;
         Station station;
-
+        CameraManager Camera = new CameraManager();
         //フラグ
         bool IsResultWindow; bool IsKeyDowned;
+        public void Initialize()
+        {
+            CameraManager.Hacker = Hacker;
+        }
         public LifeInfo Tick(Station sta,LifeInfo life,TimeSpan elapsed)
         { 
             Speed = Hacker.Scenario.VehicleLocation.Speed*3.6;//km/hに変更
@@ -72,13 +76,26 @@ namespace MetroDriveEX.MapPlugin
             if (CurrentLoc - NextLoc > Life.Margin)
             {
                 Life.Life -= (int)(CurrentLoc - NextLoc) - (int)Life.Margin;
-                AssistInfo.OverInvoke();//過走
             }
             if(NextLoc - CurrentLoc <120 && NextLoc - CurrentLoc > Life.Margin && !IsPass)
             {
                 AssistInfo.IsRestarted = true;
             }
         }
+        //SoundSourceのどっかのフラグをとってくる？
+        //public static int CheckSound(Sound sound)
+        //{
+          //  if(sound is null) return 0;
+            //if(sound.Buffers is null) return 0;
+            //foreach (SecondarySoundBuffer buffer in sound.Buffers)
+            //if (buffer is null) continue;
+              //  if (buffer.Status==SlimDX.DirectSound.BufferStatus.Playing)
+               // {
+                 //   return 1;
+                //}
+            //}
+            //return 0;
+        //}
         void OnPass()
         {
             if(Math.Abs(Now - Arrive)<1)//定通
@@ -149,8 +166,8 @@ namespace MetroDriveEX.MapPlugin
                         break;
                     }
                     Hacker.Scenario.VehicleLocation.SetLocation(Locations[i*2],true);
-                    //await Task.Yield(); <= 1f飛ばせない説あり?
-                    await Task.Delay(1);
+                    await Task.Yield();// <= 1f飛ばせない説あり?
+                    //await Task.Delay(1);
                     //↑2倍速で処理
                 }
                 AssistInfo.IsRestarted = false;

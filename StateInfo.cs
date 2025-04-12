@@ -43,7 +43,6 @@ namespace MetroDriveEX.MapPlugin
         public event EventHandler OnEBUsed;
         public event EventHandler OnGood;
         public event EventHandler OnGreat;
-        public event EventHandler OnOver;
         public event EventHandler OnTeitu;
         public event EventHandler FadeInUI;//外にシュッと動かす
         public event EventHandler FadeOutUI;
@@ -52,7 +51,6 @@ namespace MetroDriveEX.MapPlugin
         public void EBusedInvoke() => OnEBUsed.Invoke(this, EventArgs.Empty);
         public void GoodInvoke() => OnGood.Invoke(this, EventArgs.Empty);
         public void GreatInvoke() => OnGreat.Invoke(this, EventArgs.Empty);
-        public void OverInvoke() => OnOver.Invoke(this, EventArgs.Empty);
         public void TeituInvoke() => OnTeitu.Invoke(this, EventArgs.Empty);
         public void FadeInUIInvoke() => FadeInUI.Invoke(this, EventArgs.Empty);
         public void FadeOutUIInvoke() => FadeOutUI.Invoke(this, EventArgs.Empty);

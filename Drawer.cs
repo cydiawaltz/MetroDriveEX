@@ -37,12 +37,15 @@ namespace MetroDriveEX.MapPlugin
         Model[,] TextFont;//描画する文字色(中身は動的に変える)
         Model BackGroundModel;
         int BackGroundAlpha = 0;//背景画像のα値
+        float UIPos = -1;//UIの位置の設定　-2(定位置)~0(完全フェードアウト)~1（通常） => -1~0に
         //フラグ
         bool isDelaying = false;
         bool[] SubUIFlag;
         //DXDynamicTexture
         TextureHandle TextureHandle;
         GDIHelper GDIHelper;
+        //debug
+        Model grid;
 
         public void initialize(LifeInfo lifeinfo)
         {
@@ -80,21 +83,21 @@ namespace MetroDriveEX.MapPlugin
             Tutorials = new Model[tutorialInfo.Count];
             for(int i = 0; i < tutorialInfo.Count; i++)
             {
-                UIInfo info = tutorialInfo[i];
+                UIInfo info = SetAspect(tutorialInfo[i]);
                 Tutorials[i] = CreateModel(@"picture\tutorial\"+i+".png",info.x,info.y,info.sizex,info.sizey);
             }
             List<UIInfo> assistantInfo = ReadFile.ReadUIElementFile("UIList");
             UIElements = new Model[assistantInfo.Count];
             for (int i = 0; i < assistantInfo.Count; i++)
             {
-                UIInfo info = assistantInfo[i];
+                UIInfo info = SetAspect(assistantInfo[i]);
                 UIElements[i] = CreateModel(@"picture\ui\" + i + ".png", info.x, info.y, info.sizex, info.sizey);
             }
             List<UIInfo> subUI = ReadFile.ReadUIElementFile("sub");
             SubUIs = new Model[subUI.Count]; SubUIFlag = new bool[subUI.Count];
-            for (int i = 0; i < subUI.Count; i++)
+            for (int i = 0; i< subUI.Count; i++)
             {
-                UIInfo info = subUI[i];
+                UIInfo info = SetAspect(subUI[i]);
                 SubUIFlag[i] = false;
                 SubUIs[i] = CreateModel(@"picture\sub\" + i + ".png", info.x, info.y, info.sizex, info.sizey);
             }
@@ -106,6 +109,14 @@ namespace MetroDriveEX.MapPlugin
                 RectangleF rectangleF = new RectangleF(x, y, sizex, sizey);
                 return Model.CreateRectangleWithTexture(rectangleF, 0, 0, texFilePath);//四角形の3Dモデル
             }
+            //debug
+            grid = CreateModel(@"picture\debug\grid.png", 0, 0, Width, -Height);
+        }
+        public void OnScenarioCreated(ScenarioCreatedEventArgs e)
+        {
+            //Model target_03_3 = e.Scenario.Map.StructureModels["03_3"];
+            //TextureHandle = target_03_3.
+            FadeIn(new object(), new EventArgs());
         }
         public async void OnEBUsed(object sender, EventArgs e)
         {
@@ -116,23 +127,57 @@ namespace MetroDriveEX.MapPlugin
         }
         public async void FadeOut(object sender, EventArgs e)
         {
-            SubUIFlag[1] = true;
-            await Task.Delay(1000);
-            SubUIFlag[1] = false;
+            float fadeOutValue = 0.03f;//1fで移動する距離(MAX1に注意)
+            for(int i = 0;i > 1/fadeOutValue; i++)
+            {
+                UIPos -= fadeOutValue;
+                await Task.Delay(1);
+                if(UIPos < 0)
+                {
+                    UIPos = 0;
+                    break;
+                }
+            }
         }
-        public async void FadeIn(object sender, EventArgs e) { }
+        public async void FadeIn(object sender, EventArgs e)
+        {
+            float fadeOutValue = 0.05f;//1fで移動する距離(MAX1に注意) => Maxは0
+            while(true)
+            {
+                UIPos += fadeOutValue;
+                //await Task.Yield();
+                await Task.Delay(1);
+                if (UIPos > 0)
+                {
+                    UIPos = 0;
+                    break;
+                }
+            }
+        }
         public async void OnGood(object sender, EventArgs e)
+        {
+            Hacker.Scenario.TimeManager.State = TimeManager.GameState.Paused;
+            SubUIFlag[1] = true;
+            //音を鳴らす
+            await Task.Delay(3000);
+            SubUIFlag[1] = false;
+            Hacker.Scenario.TimeManager.State = TimeManager.GameState.Forward;
+        }
+        public async void OnGreat(object sender, EventArgs e)
         {
             Hacker.Scenario.TimeManager.State = TimeManager.GameState.Paused;
             SubUIFlag[2] = true;
             //音を鳴らす
-            await Task.Delay(3000);
+            await Task.Delay(3000);//ここは調整
             SubUIFlag[2] = false;
-            Hacker.Scenario.TimeManager.
+            Hacker.Scenario.TimeManager.State = TimeManager.GameState.Forward;
         }
-        public async void OnGreat(object sender, EventArgs e) { }
-        public async void OnOver(object sender, EventArgs e) { }
-        public async void OnTeitu(object sender, EventArgs e) { }
+        public async void OnTeitu(object sender, EventArgs e)
+        {
+            SubUIFlag[4] = true;
+            await Task.Delay(3000);
+            SubUIFlag[4] = false;
+        }
         public async void AlphaInAnimation(object sender, EventArgs e)
         {
             for (int i = 0; i < 64; i++)//ここでジョジョに暗転させる
@@ -208,6 +253,11 @@ namespace MetroDriveEX.MapPlugin
             {
                 Next[i] = int.Parse(next.Substring(i, 1));
             }
+            if (NowLoc - NextLoc > LifeInfo.Margin)//「over」
+            {
+                SubUIFlag[3] = true;//「over」表示（必要なときのみONにする）
+            }
+            else SubUIFlag[3] = false;
         }
         UIInfo SetAspect(UIInfo def)//横幅の長さを設定(基準1920px)
         {
@@ -232,11 +282,6 @@ namespace MetroDriveEX.MapPlugin
             foreach(Model uiElement in UIElements) uiElement.Dispose();
             if (!(TextFont == null)) { foreach (Model textfont in TextFont) textfont.Dispose(); }
         }
-        public void OnScenarioCreated(ScenarioCreatedEventArgs e)
-        {
-            Model target_03_3 = e.Scenario.Map.StructureModels["03_3"];
-            //TextureHandle = target_03_3.
-        }
         void ChangeSigns()//車両の幕をDXDynamicTextureでどうにかする
         {
             if(TextureHandle.HasEnoughTimePassed(10))
@@ -255,82 +300,63 @@ namespace MetroDriveEX.MapPlugin
                 else { Power[5].Draw(Direct3DProvider.Instance, false); }//ATC作動
                                                                          //制動(Brake)*/
                 Power[PowerNotch].Draw(Direct3DProvider.Instance, false);
-                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2, Height / 2, 0));//(float)Math.Sin(Native.VehicleState.Time.TotalSeconds)*100
+                device.SetTransform(TransformState.World, Matrix.Translation( Width/ 2, Height / 2-225*Width/1920, 0));//(float)Math.Sin(Native.VehicleState.Time.TotalSeconds)*100
                 /*if (IsAtcMoved) { Brake[BrakeNotch].Draw(Direct3DProvider.Instance, false); }
                 else { Brake[10].Draw(Direct3DProvider.Instance, false); }*/
                 Brake[BrakeNotch].Draw(Direct3DProvider.Instance, false);
                 //Life => UIデザイン検討
-                /*if (LifeInfo.Life >= 100)
-                {
-                    for (int i = 0; i < 3; i++)
-                    {
-                        device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - (150 - i * 40), -Height / 2 + 250, 0));
-                        Sky[Life[i]].Draw(Direct3DProvider.Instance, false);
-                    }
-                }
-                else if (LifeInfo.Life >= 10)
-                {
-                    for (int i = 0; i < 2; i++)
-                    {
-                        device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - (110 - i * 40), -Height / 2 + 250, 0));
-                        Sky[Life[i]].Draw(Direct3DProvider.Instance, false);
-                    }
-                }
-                else
-                {
-                    device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - 70, -Height / 2 + 250, 0));
-                    Sky[Life[0]].Draw(Direct3DProvider.Instance, false);
-                }*/
                 //到着時刻
-                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2, -Height / 2 + 30, 0));
+                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2, -Height / 2 + 20 * UIPos*Height/1080, 0));
                 UIElements[3].Draw(Direct3DProvider.Instance, false);//[現在時刻]
-                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2-300, -Height / 2 + 30, 0));
+                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2-300, -Height / 2 + 30 * UIPos, 0));
                 White[Arrive[0],0].Draw(Direct3DProvider.Instance, false);
-                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2-250, -Height / 2 + 30, 0));
+                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2-250, -Height / 2 + 30 * UIPos, 0));
                 White[Arrive[1], 0].Draw(Direct3DProvider.Instance, false);
-                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - 200, -Height / 2 + 30, 0));
+                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - 200, -Height / 2 + 30 * UIPos, 0));
                 White[Arrive[2], 0].Draw(Direct3DProvider.Instance, false);
-                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - 220, -Height / 2 + 30, 0));
+                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - 220, -Height / 2 + 30 * UIPos, 0));
                 White[10, 0].Draw(Direct3DProvider.Instance, false);
-                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - 150, -Height / 2 + 30, 0));
+                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - 150, -Height / 2 + 30 * UIPos, 0));
                 White[Arrive[3], 0].Draw(Direct3DProvider.Instance, false);
-                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - 100, -Height / 2 + 30, 0));
+                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - 100, -Height / 2 + 30 * UIPos, 0));
                 White[Arrive[4], 1].Draw(Direct3DProvider.Instance, false);
-                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - 50, -Height / 2 + 30, 0));
+                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - 50, -Height / 2 + 30 * UIPos, 0));
                 White[Arrive[5], 1].Draw(Direct3DProvider.Instance, false);
-
                 //現在時刻
                 if (RestTime <= 5000 && RestTime > 0) TextFont = Blue;
                 else if (RestTime <= 0) TextFont = Red;
                 else TextFont = White;
-                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2, -Height / 2 + 90, 0));
+                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2, -Height / 2 + 90 * UIPos * Height / 1080, 0));
                 UIElements[0].Draw(Direct3DProvider.Instance, false);//[現在時刻]
-                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2-300, -Height / 2 + 90, 0));
+                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2-300, -Height / 2 + 90 * UIPos, 0));
                 TextFont[Now[0],0].Draw(Direct3DProvider.Instance, false);//1桁目
-                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - 250, -Height / 2 + 90, 0));
+                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - 250, -Height / 2 + 90 * UIPos, 0));
                 TextFont[Now[1], 0].Draw(Direct3DProvider.Instance, false);//2桁目
-                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - 225, -Height / 2 + 90, 0));
+                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - 225, -Height / 2 + 90 * UIPos, 0));
                 TextFont[10, 0].Draw(Direct3DProvider.Instance, false);//コロン(:)
-                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - 200, -Height / 2 + 90, 0));
+                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - 200, -Height / 2 + 90 * UIPos, 0));
                 TextFont[Now[2], 0].Draw(Direct3DProvider.Instance, false);//3桁目
-                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - 150, -Height / 2 + 90, 0));
+                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - 150, -Height / 2 + 90 * UIPos, 0));
                 TextFont[Now[3], 0].Draw(Direct3DProvider.Instance, false);//4桁目
-                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - 100, -Height / 2 + 90, 0));
+                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - 100, -Height / 2 + 90 * UIPos, 0));
                 TextFont[Now[4], 1].Draw(Direct3DProvider.Instance, false);//5桁目
-                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - 50, -Height / 2 + 90, 0));
+                device.SetTransform(TransformState.World, Matrix.Translation(Width / 2 - 50, -Height / 2 + 90 * UIPos, 0));
                 TextFont[Now[5], 1].Draw(Direct3DProvider.Instance, false);//6桁目
                 //距離表示
-                device.SetTransform(TransformState.World, Matrix.Translation(-Width / 2 + 277, -Height / 2 + 90, 0));
+                device.SetTransform(TransformState.World, Matrix.Translation(-Width / 2 + 277, -Height / 2 + 90*UIPos, 0));
                 Texts[3].Draw(Direct3DProvider.Instance, false);
-                device.SetTransform(TransformState.World, Matrix.Translation(-Width / 2+140, -Height / 2 + 150, 0));
+                device.SetTransform(TransformState.World, Matrix.Translation(-Width / 2+140, -Height / 2 + 150 * UIPos, 0));
                 if (Math.Abs(NowLoc - NextLoc) < LifeInfo.Margin) Texts[1].Draw(Direct3DProvider.Instance, false);//合格範囲
                 else if (NowLoc < NextLoc) Texts[2].Draw(Direct3DProvider.Instance, false);//「過走」
                 else Texts[0].Draw(Direct3DProvider.Instance, false);//「あと」
                 for (int i = 0; i < 4; i++)
                 {
-                    device.SetTransform(TransformState.World, Matrix.Translation(-Width / 2 + 50 * i, -Height / 2 + 100, 0));
+                    device.SetTransform(TransformState.World, Matrix.Translation(-Width / 2 + 50 * i, -Height / 2 + 100 * UIPos, 0));
                     White[Next[i], 1].Draw(Direct3DProvider.Instance, false);
                 }
+                //debug
+                device.SetTransform(TransformState.World, Matrix.Translation(-Width / 2, Height / 2, 0));
+                grid.Draw(Direct3DProvider.Instance, false);
             }
 
         }
